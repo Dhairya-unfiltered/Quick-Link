@@ -52,7 +52,7 @@ app.use(async (req, res, next) => {
 
 
 
-app.get('/:id', linkController.redirect);
+app.get('/:short', linkController.redirect);
 app.use('/', authRoutes);
 app.use('/links', linkRoutes);
 
