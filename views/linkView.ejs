@@ -1,0 +1,66 @@
+<!-- views/linkView.ejs -->
+<section class="edit-page">
+  <div class="edit-card">
+    <header class="edit-header">
+      <h2>Edit Link</h2>
+      <div class="edit-header-actions">
+        <!-- desktop back (visible on wider screens) -->
+        <a href="/user/dashboard" class="btn-ghost back-desktop">Back</a>
+      </div>
+    </header>
+    <form id="editForm" class="edit-form">
+      <label class="label">Link name</label>
+      <input name="name" value="<%= link.name %>" placeholder="Link name" />
+
+      <label class="label">Short URL (path)</label>
+      <input name="shortUrl" value="<%= link.shortUrl %>" placeholder="short-url" />
+
+      <label class="label">Long URL</label>
+      <input name="longUrl" value="<%= link.longUrl %>" placeholder="https://example.com" />
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button id="deleteBtn" type="button" class="btn btn-danger">Delete</button>
+
+        <!-- mobile back button: shown only on small screens; sits to the right -->
+        <a href="/user/dashboard" class="btn-ghost back-mobile">Back</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  // Save handler
+  document.getElementById('editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      name: e.target.name.value,
+      shortUrl: e.target.shortUrl.value,
+      longUrl: e.target.longUrl.value
+    };
+    const res = await fetch('/links/<%= link._id %>', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (json.ok) {
+      alert('Saved');
+      location.reload();
+    } else {
+      alert(json.error || 'Save failed');
+    }
+  });
+
+  // Delete handler
+  document.getElementById('deleteBtn').addEventListener('click', async () => {
+    if (!confirm('Delete this link?')) return;
+    const res = await fetch('/links/<%= link._id %>', { method: 'DELETE' });
+    const json = await res.json();
+    if (json.ok) {
+      window.location.replace('/user/dashboard');
+    } else {
+      alert(json.error || 'Delete failed');
+    }
+  });
+</script>

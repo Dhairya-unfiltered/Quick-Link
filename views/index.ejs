@@ -1,0 +1,54 @@
+<!-- views/index.ejs -->
+<section class="auth-section">
+  <div class="tabs">
+    <button id="show-login" class="tab-btn active">Login</button>
+    <button id="show-register" class="tab-btn">Register</button>
+  </div>
+
+  <div id="login" class="form-box">
+    <h2>Login</h2>
+    <% if(errors && errors.length){ %>
+      <ul class="errors">
+        <% errors.forEach(e => { %>
+          <li><%= e.msg %></li>
+        <% }) %>
+      </ul>
+    <% } %>
+    <form method="POST" action="/login" class="auth-form">
+      <input name="email" placeholder="Email" value="<%= old.email || '' %>" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button class="submit-btn">Login</button>
+    </form>
+  </div>
+
+  <div id="register" class="form-box hidden">
+    <h2>Register</h2>
+    <form method="POST" action="/register" class="auth-form">
+      <input name="name" placeholder="Name" value="<%= old.name || '' %>" required />
+      <input name="email" placeholder="Email" value="<%= old.email || '' %>" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button class="submit-btn">Register</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  const loginBox = document.getElementById('login');
+  const registerBox = document.getElementById('register');
+  const btnLogin = document.getElementById('show-login');
+  const btnRegister = document.getElementById('show-register');
+
+  btnLogin.addEventListener('click', ()=>{
+    loginBox.classList.remove('hidden');
+    registerBox.classList.add('hidden');
+    btnLogin.classList.add('active');
+    btnRegister.classList.remove('active');
+  });
+
+  btnRegister.addEventListener('click', ()=>{
+    loginBox.classList.add('hidden');
+    registerBox.classList.remove('hidden');
+    btnRegister.classList.add('active');
+    btnLogin.classList.remove('active');
+  });
+</script>

@@ -1,0 +1,127 @@
+<!-- views/dashboard.ejs -->
+<section class="dashboard-section">
+  <div class="dash-header">
+    <h2 class="welcome">Welcome, <%= user.name %></h2>
+    <div class="header-actions">
+      <button id="createBtn" class="create-btn">+ Create Link</button>
+    </div>
+  </div>
+
+  <div id="links" class="links-grid">
+    <% if (user.links && user.links.length) { %>
+      <% user.links.forEach(l => { %>
+        <div class="link-card" data-id="<%= l._id %>">
+          <!-- Top: name on left, edit & copy buttons on right -->
+          <div class="link-top">
+            <h3 class="link-name"><%= l.name %></h3>
+
+            <div class="top-actions">
+              <button class="btn-edit" data-id="<%= l._id %>">Edit</button>
+              <button class="btn-copy" data-short="<%= l.shortUrl %>">Copy</button>
+            </div>
+          </div>
+
+          <!-- Bottom: full shortlink (domain + short) populated client-side -->
+          <div class="link-bottom">
+            <a class="full-link" href="/<%= l.shortUrl %>" data-short="<%= l.shortUrl %>" target="_blank" rel="noopener noreferrer">
+              <span class="full-text"><%= l.shortUrl %></span>
+            </a>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <p class="muted">No links yet.</p>
+    <% } %>
+  </div>
+</section>
+
+<!-- modal (unchanged) -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Create Link</h3>
+    <form id="createForm" class="create-form">
+      <input name="name" placeholder="Link name" />
+      <input name="shortUrl" placeholder="Custom short URL (optional)" />
+      <input name="longUrl" placeholder="Long URL (optional)" />
+      <div class="modal-actions">
+        <button type="submit" class="submit-btn">Create</button>
+        <button type="button" id="closeModal" class="btn-cancel">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // modal controls
+  document.getElementById('createBtn').addEventListener('click', ()=> document.getElementById('modal').classList.remove('hidden'));
+  document.getElementById('closeModal').addEventListener('click', ()=> document.getElementById('modal').classList.add('hidden'));
+
+  // create form
+  document.getElementById('createForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const form = e.target;
+    const data = { name: form.name.value, shortUrl: form.shortUrl.value, longUrl: form.longUrl.value };
+    const res = await fetch('/links', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(data) });
+    const json = await res.json();
+    if (json.ok) location.reload();
+    else alert(json.error || 'Failed');
+  });
+
+  // helper origin
+  const origin = window.location.origin.replace(/\/$/, '');
+
+  // wire card-level interactions
+  document.querySelectorAll('.link-card').forEach(card => {
+    const id = card.dataset.id;
+
+    // populate the full link text and href
+    const anchor = card.querySelector('.full-link');
+    const short = anchor && anchor.dataset.short;
+    if (anchor && short) {
+      const full = `${origin}/${short}`;
+      anchor.href = full;
+      const span = anchor.querySelector('.full-text');
+      if (span) span.textContent = full;
+    }
+
+    // card click -> open edit page
+    card.addEventListener('click', () => {
+      if (!id) return;
+      window.location.href = '/links/' + id;
+    });
+
+    // Edit button: stop propagation and open edit page in same tab
+    const editBtn = card.querySelector('.btn-edit');
+    if (editBtn) {
+      editBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const id = editBtn.dataset.id || card.getAttribute('data-id');
+        if (!id) return;
+        window.location.href = '/links/' + id;
+      });
+    }
+
+    // Copy button: stop propagation and copy full URL
+    const copyBtn = card.querySelector('.btn-copy');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        const short = copyBtn.dataset.short || (card.querySelector('.full-link') && card.querySelector('.full-link').dataset.short);
+        if (!short) return;
+        const full = `${origin}/${short}`;
+        try {
+          await navigator.clipboard.writeText(full);
+          const prev = copyBtn.textContent;
+          copyBtn.textContent = 'Copied';
+          setTimeout(()=> copyBtn.textContent = prev, 1200);
+        } catch (err) {
+          alert('Copy failed');
+        }
+      });
+    }
+
+    // anchor click should not navigate the card
+    const fullAnchor = card.querySelector('.full-link');
+    if (fullAnchor) fullAnchor.addEventListener('click', (ev) => ev.stopPropagation());
+  });
+</script>
